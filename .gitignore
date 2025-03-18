@@ -8,3 +8,8 @@ tmp/nanoc/
 
 # Crash Log
 crash.log
+
+
+node_modules
+dist
+.vscode
