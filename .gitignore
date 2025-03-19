@@ -13,3 +13,5 @@ crash.log
 node_modules
 dist
 .vscode
+mongo
+.env

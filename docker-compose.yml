@@ -1,0 +1,11 @@
+services:
+  mongodb:
+    image: mongo:6.0
+    container_name: local_mongodb
+    restart: always
+    environment:
+      MONGODB_DATABASE: nestjs-test
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./mongo:/data/db

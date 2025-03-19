@@ -1,26 +1,78 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { isValidObjectId, Model } from 'mongoose';
+import { User } from './entities/user.entity';
+import { InjectModel } from '@nestjs/mongoose';
 
 @Injectable()
 export class UsersService {
-  create(createUserDto: CreateUserDto) {
-    return 'This action adds a new user';
+  constructor(
+    @InjectModel( User.name )
+    private readonly userModel: Model<User>
+  ) {}
+
+  async create(createUserDto: CreateUserDto) {
+    try {
+      createUserDto.name = createUserDto.name.toLocaleLowerCase();
+      const user = await this.userModel.create(createUserDto);
+      return user;
+    } catch (error) {
+      this.handleErrors(error);
+    }
   }
 
-  findAll() {
-    return `This action returns all users`;
+  async findAll() {
+    try {
+      const users = await this.userModel.find().select('-__v -password').lean();
+      return users;
+    } catch (error) {
+      this.handleErrors(error);
+    }
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
+  async findOne(id: string) {
+    try {
+      if( !isValidObjectId(id) ){
+        throw new BadRequestException(`The id: ${id} is not a valid id`);
+      }
+      let user: User = await this.userModel.findById(id);
+      if( !user ) throw new NotFoundException();
+      return user;
+    } catch (error) {
+      this.handleErrors(error);
+    }
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
+  async update(id: string, updateUserDto: UpdateUserDto) {
+    try {
+      const user = await this.findOne(id);
+      if( !user ){
+        throw new NotFoundException(`User with id ${id} not found`);
+      }
+      updateUserDto.name = updateUserDto.name.toLocaleLowerCase();
+      await user.updateOne(updateUserDto);
+      return { ...user.toJSON(), ...updateUserDto };
+    } catch (error) {
+      this.handleErrors(error);
+    }
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} user`;
+  async remove(id: string) {
+    try {
+      const user = await this.findOne(id);
+      await user.deleteOne();
+      return `User deleted`;
+    } catch (error) {
+      this.handleErrors(error);
+    }
+  }
+
+  private handleErrors(error: any){
+    if( error.code === 11000 ){
+      throw new BadRequestException(`User already exists`);
+    }
+    console.log(error);
+    throw new InternalServerErrorException(`Can't perform the operation`);
   }
 }
