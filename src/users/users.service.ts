@@ -60,9 +60,8 @@ export class UsersService {
 
   async remove(id: string) {
     try {
-      const user = await this.findOne(id);
-      await user.deleteOne();
-      return `User deleted`;
+      const result = this.userModel.findByIdAndDelete(id);
+      return result;
     } catch (error) {
       this.handleErrors(error);
     }
