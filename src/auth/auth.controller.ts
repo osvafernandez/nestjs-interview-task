@@ -14,7 +14,7 @@ export class AuthController {
   @ApiResponse({ status: 201, description: 'User successfully registered' })
   async register(@Body () createUserDto: CreateUserDto, @Res({ passthrough: true }) response: Response) {
     const { token } = await this.authService.register(createUserDto);
-    response.cookie('jwt_token', `Bearer\u0020${token}`, {
+    response.cookie('jwt_token', `${token}`, {
       httpOnly: true,
       secure: false, // hacer true para https
       sameSite: 'strict',
@@ -26,7 +26,7 @@ export class AuthController {
   @ApiResponse({ status: 200, description: 'User successfully logged in' })
   async loginUser(@Body() loginUserDto: LoginUserDto, @Res({ passthrough: true }) response: Response) {
     const { token } = await this.authService.login(loginUserDto);
-    response.cookie('jwt_token', `Bearer\u0020${token}`, {
+    response.cookie('jwt_token', `${token}`, {
       httpOnly: true,
       secure: false,
       sameSite: 'strict',
