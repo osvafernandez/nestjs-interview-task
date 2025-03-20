@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { isValidObjectId, Model } from 'mongoose';
@@ -6,12 +6,14 @@ import { User } from './entities/user.entity';
 import { InjectModel } from '@nestjs/mongoose';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
 import { handleErrors } from 'src/common/handlers/error-handler';
+import { LoggerService } from 'src/loger.service';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectModel( User.name )
-    private readonly userModel: Model<User>
+    private readonly userModel: Model<User>,
+    private readonly logger: LoggerService
   ) {}
 
   async create(createUserDto: CreateUserDto) {
@@ -20,6 +22,7 @@ export class UsersService {
       const user = await this.userModel.create(createUserDto);
       return user;
     } catch (error) {
+      this.logger.error(error);
       handleErrors(error);
     }
   }
@@ -34,6 +37,7 @@ export class UsersService {
         .lean();
       return users;
     } catch (error) {
+      this.logger.error(error);
       handleErrors(error);
     }
   }
@@ -50,6 +54,7 @@ export class UsersService {
       if( !user ) throw new NotFoundException();
       return user;
     } catch (error) {
+      this.logger.error(error);
       handleErrors(error);
     }
   }
@@ -63,8 +68,9 @@ export class UsersService {
       updateUserDto.username = updateUserDto.username.toLocaleLowerCase();
       user.updatedAt = new Date(Date.now());
       await user.updateOne(updateUserDto);
-      return { ...user.toJSON(), ...updateUserDto };
+      return user;
     } catch (error) {
+      this.logger.error(error);
       handleErrors(error);
     }
   }
@@ -77,6 +83,7 @@ export class UsersService {
       }
       return;
     } catch (error) {
+      this.logger.error(error);
       handleErrors(error);
     }
   }

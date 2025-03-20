@@ -4,6 +4,5 @@ export const handleErrors = (error: any) => {
     if( error.code === 11000 ){
       throw new BadRequestException(`User already exists`);
     }
-    console.log(error);
     throw new InternalServerErrorException(`Can't perform the operation`);
   }

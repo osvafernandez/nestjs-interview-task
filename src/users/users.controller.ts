@@ -8,6 +8,7 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { UseGuards } from '@nestjs/common';
 import { MessagesGateway } from 'src/messages/messages.gateway';
+import { Request } from 'express';
 
 @ApiTags("Users")
 @Controller('users')
@@ -19,15 +20,16 @@ export class UsersController {
 
   @Post()
   @ApiBearerAuth()
-  async create(@Body() createUserDto: CreateUserDto, @Req() req) {
+  async create(@Body() createUserDto: CreateUserDto, @Req() req: Request) {
+    console.log(req.cookies);
     const user = await this.usersService.create(createUserDto);
-    this.messagesGateway.emitUserEvent(req.user.id, 'create user');
+    this.messagesGateway.emitUserEvent(user.id, 'create user');
     return user;
   }
 
   @Get()
   @ApiBearerAuth()
-  async findAll(@Query() query: PaginationDto) {
+  async findAll(@Query() query: PaginationDto, @Req() req) {
     return await this.usersService.findAll(query);
   }
 
@@ -41,7 +43,7 @@ export class UsersController {
   @ApiBearerAuth()
   async update(@Param('id', ParseMongoIdPipe) id: string, @Body() updateUserDto: UpdateUserDto, @Req() req) {
     const user = await this.usersService.update(id, updateUserDto);
-    this.messagesGateway.emitUserEvent(req.user.id, 'update user');
+    this.messagesGateway.emitUserEvent(user.id, 'update user');
     return user;
   }
 

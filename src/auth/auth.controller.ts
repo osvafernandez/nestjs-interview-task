@@ -1,8 +1,9 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Post, Res } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CreateUserDto } from 'src/users/dto/create-user.dto';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiResponse, ApiTags } from '@nestjs/swagger';
 import { LoginUserDto } from './dto/login-user.dto';
+import { Response } from 'express';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -10,13 +11,26 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('register')
-  async register(@Body () createUserDto: CreateUserDto) {
-    return await this.authService.register(createUserDto);
+  @ApiResponse({ status: 201, description: 'User successfully registered' })
+  async register(@Body () createUserDto: CreateUserDto, @Res({ passthrough: true }) response: Response) {
+    const { token } = await this.authService.register(createUserDto);
+    response.cookie('jwt_token', `Bearer\u0020${token}`, {
+      httpOnly: true,
+      secure: false, // hacer true para https
+      sameSite: 'strict',
+    });
+    return {jwt_token: token};
   }
 
   @Post('login')
-  async loginUser(@Body() loginUserDto: LoginUserDto) {
-    return await this.authService.login(loginUserDto);
-
+  @ApiResponse({ status: 200, description: 'User successfully logged in' })
+  async loginUser(@Body() loginUserDto: LoginUserDto, @Res({ passthrough: true }) response: Response) {
+    const { token } = await this.authService.login(loginUserDto);
+    response.cookie('jwt_token', `Bearer\u0020${token}`, {
+      httpOnly: true,
+      secure: false,
+      sameSite: 'strict',
+    });
+    return {jwt_token: token};
   }
 }

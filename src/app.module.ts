@@ -6,6 +6,7 @@ import { AppController } from './app.controller';
 import { CommonModule } from './common/common.module';
 import { AuthModule } from './auth/auth.module';
 import { MessagesModule } from './messages/messages.module';
+import { LoggerService } from './loger.service';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { MessagesModule } from './messages/messages.module';
     AuthModule,
     MessagesModule],
   controllers: [AppController],
-  providers: [],
+  providers: [LoggerService],
+  exports: [LoggerService]
 })
 export class AppModule {}
