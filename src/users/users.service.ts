@@ -4,6 +4,8 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { isValidObjectId, Model } from 'mongoose';
 import { User } from './entities/user.entity';
 import { InjectModel } from '@nestjs/mongoose';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
+import { handleErrors } from 'src/common/handlers/error-handler';
 
 @Injectable()
 export class UsersService {
@@ -14,20 +16,25 @@ export class UsersService {
 
   async create(createUserDto: CreateUserDto) {
     try {
-      createUserDto.name = createUserDto.name.toLocaleLowerCase();
+      createUserDto.username = createUserDto.username.toLowerCase();
       const user = await this.userModel.create(createUserDto);
       return user;
     } catch (error) {
-      this.handleErrors(error);
+      handleErrors(error);
     }
   }
 
-  async findAll() {
+  async findAll(query: PaginationDto) {
     try {
-      const users = await this.userModel.find().select('-__v -password').lean();
+      const { limit = 15 } = query;
+      const users = await this.userModel.find()
+        .limit(limit)
+        .sort({ createdAt: -1 })
+        .select('-__v -password')
+        .lean();
       return users;
     } catch (error) {
-      this.handleErrors(error);
+      handleErrors(error);
     }
   }
 
@@ -36,11 +43,14 @@ export class UsersService {
       if( !isValidObjectId(id) ){
         throw new BadRequestException(`The id: ${id} is not a valid id`);
       }
-      let user: User = await this.userModel.findById(id);
+      let user: User = await this.userModel
+        .findById(id)
+        .select('-__v -password')
+        .lean();
       if( !user ) throw new NotFoundException();
       return user;
     } catch (error) {
-      this.handleErrors(error);
+      handleErrors(error);
     }
   }
 
@@ -50,28 +60,24 @@ export class UsersService {
       if( !user ){
         throw new NotFoundException(`User with id ${id} not found`);
       }
-      updateUserDto.name = updateUserDto.name.toLocaleLowerCase();
+      updateUserDto.username = updateUserDto.username.toLocaleLowerCase();
+      user.updatedAt = new Date(Date.now());
       await user.updateOne(updateUserDto);
       return { ...user.toJSON(), ...updateUserDto };
     } catch (error) {
-      this.handleErrors(error);
+      handleErrors(error);
     }
   }
 
   async remove(id: string) {
     try {
-      const result = this.userModel.findByIdAndDelete(id);
-      return result;
+      const { deletedCount } = await this.userModel.deleteOne({ _id: id });
+      if( deletedCount === 0 ){
+        throw new BadRequestException(`User not found`);
+      }
+      return;
     } catch (error) {
-      this.handleErrors(error);
+      handleErrors(error);
     }
-  }
-
-  private handleErrors(error: any){
-    if( error.code === 11000 ){
-      throw new BadRequestException(`User already exists`);
-    }
-    console.log(error);
-    throw new InternalServerErrorException(`Can't perform the operation`);
   }
 }

@@ -8,7 +8,7 @@ export class User extends Document {
         required: true,
         index: true
     })
-    name: string;
+    username: string;
 
     @Prop({
         unique: true,
@@ -18,7 +18,8 @@ export class User extends Document {
     email: string;
 
     @Prop({
-        required: true
+        required: true,
+        select: false
     })
     password: string;
 
