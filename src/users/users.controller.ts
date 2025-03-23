@@ -10,6 +10,13 @@ import { UseGuards } from '@nestjs/common';
 import { MessagesGateway } from 'src/messages/messages.gateway';
 import { Request } from 'express';
 
+
+interface CustomRequest extends Request {
+  user: {
+    username: string;
+  };
+}
+
 @ApiTags("Users")
 @Controller('users')
 @UseGuards(AuthGuard('jwt'))
@@ -17,19 +24,19 @@ export class UsersController {
   constructor(private readonly usersService: UsersService,
     private readonly messagesGateway: MessagesGateway
   ) {}
-
+    
   @Post()
   @ApiBearerAuth()
-  async create(@Body() createUserDto: CreateUserDto, @Req() req: Request) {
-    console.log(req.cookies);
+  async create(@Body() createUserDto: CreateUserDto, @Req() req: CustomRequest) {
     const user = await this.usersService.create(createUserDto);
-    this.messagesGateway.emitUserEvent(user.id, 'create user');
+    this.messagesGateway.emitUserEvent('User Created', req.user.username);
     return user;
   }
 
   @Get()
   @ApiBearerAuth()
   async findAll(@Query() query: PaginationDto, @Req() req) {
+    console.log(req.user.username);
     return await this.usersService.findAll(query);
   }
 
@@ -41,17 +48,17 @@ export class UsersController {
 
   @Patch(':id')
   @ApiBearerAuth()
-  async update(@Param('id', ParseMongoIdPipe) id: string, @Body() updateUserDto: UpdateUserDto, @Req() req) {
+  async update(@Param('id', ParseMongoIdPipe) id: string, @Body() updateUserDto: UpdateUserDto, @Req() req: CustomRequest) {
     const user = await this.usersService.update(id, updateUserDto);
-    this.messagesGateway.emitUserEvent(user.id, 'update user');
+    this.messagesGateway.emitUserEvent('User Updated', req.user.username);
     return user;
   }
 
   @Delete(':id')
   @ApiBearerAuth()
-  async remove(@Param('id', ParseMongoIdPipe) id: string, @Req() req) {
+  async remove(@Param('id', ParseMongoIdPipe) id: string, @Req() req: CustomRequest) {
     await this.usersService.remove(id);
-    this.messagesGateway.emitUserEvent(req.user.id, 'delete user');
+    this.messagesGateway.emitUserEvent('User Deleted', req.user.username);
     return;
   }
 }

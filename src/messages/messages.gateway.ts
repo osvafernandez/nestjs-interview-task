@@ -2,7 +2,7 @@ import { OnGatewayConnection, OnGatewayDisconnect, WebSocketGateway, WebSocketSe
 import { MessagesService } from './messages.service';
 import { Server, Socket } from 'socket.io';
 
-@WebSocketGateway({cors: true})
+@WebSocketGateway(86, {cors: true})
 export class MessagesGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
  @WebSocketServer() webServer: Server
@@ -21,8 +21,9 @@ export class MessagesGateway implements OnGatewayConnection, OnGatewayDisconnect
     // this.messagesService.removeClient(client.id);
   }
 
-  emitUserEvent(userId: string, action: string){
-    this.webServer.emit(`El usuario ${userId} realizó la operacion ${action}`);
+  // @SubscribeMessage('emitUserEvent')
+  emitUserEvent(action: string, username: string){
+    this.webServer.emit('user-action' ,`El usuario ${username} realizó la operacion ${action}`);
   }
 
 }
