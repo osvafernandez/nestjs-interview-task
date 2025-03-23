@@ -8,14 +8,8 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { UseGuards } from '@nestjs/common';
 import { MessagesGateway } from 'src/messages/messages.gateway';
-import { Request } from 'express';
+import { CustomRequest } from 'src/common/interfaces/cusotm-request.interface';
 
-
-interface CustomRequest extends Request {
-  user: {
-    username: string;
-  };
-}
 
 @ApiTags("Users")
 @Controller('users')
@@ -35,8 +29,7 @@ export class UsersController {
 
   @Get()
   @ApiBearerAuth()
-  async findAll(@Query() query: PaginationDto, @Req() req) {
-    console.log(req.user.username);
+  async findAll(@Query() query: PaginationDto) {
     return await this.usersService.findAll(query);
   }
 
