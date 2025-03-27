@@ -6,6 +6,7 @@ import { User, UserSchema } from 'src/users/entities/user.entity';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
 import { JwtStrategy } from './strategies/jwt-strategies';
+import { MessagesModule } from 'src/messages/messages.module';
 
 @Module({
   controllers: [AuthController],
@@ -26,7 +27,8 @@ import { JwtStrategy } from './strategies/jwt-strategies';
         secret: process.env.JWT_SECRET,
         signOptions: { expiresIn: '1h' } };
       }
-    })
+    }),
+    MessagesModule
   ],
   exports: [JwtStrategy, PassportModule, JwtModule, AuthService]
 })
